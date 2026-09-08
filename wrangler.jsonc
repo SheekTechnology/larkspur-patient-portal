@@ -1,0 +1,12 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "larkspur-patient-portal",
+  "compatibility_date": "2026-09-08",
+  "assets": {
+    // Vite's build output.
+    "directory": "./dist",
+    // This app is a single-page app: React Router owns the URLs. Without this,
+    // loading /auth/callback or /patient directly would 404 and sign-in would break.
+    "not_found_handling": "single-page-application"
+  }
+}
