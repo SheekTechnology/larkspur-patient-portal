@@ -2,7 +2,7 @@ import { AppShell } from '../components/AppShell'
 import { AppointmentList } from '../components/AppointmentList'
 import { Card, EmptyState, ErrorBanner, Spinner } from '../components/ui'
 import { F, OBJ } from '../knack/config'
-import { formatDate, formatDateTime, isUpcoming, text } from '../knack/format'
+import { formatDate, formatDateTime, isUpcoming, phone, text } from '../knack/format'
 import { useRecords } from '../knack/useRecords'
 import { useSession } from '../knack/session'
 
@@ -61,7 +61,7 @@ export function PatientView() {
               {me.loading ? <Spinner /> : me.error ? <ErrorBanner error={me.error} /> : profile ? (
                 <dl className="space-y-3 text-sm">
                   <Row label="Date of birth" value={formatDate(profile, F.patient.dob)} />
-                  <Row label="Phone" value={text(profile, F.patient.phone)} />
+                  <Row label="Phone" value={phone(profile, F.patient.phone)} />
                   <Row label="Insurance" value={text(profile, F.patient.insurance)} />
                   <Row label="Preferred contact" value={text(profile, F.patient.contactMethod)} />
                 </dl>

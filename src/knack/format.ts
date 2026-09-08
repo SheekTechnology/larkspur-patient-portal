@@ -7,6 +7,14 @@ export function raw<T = any>(record: Record<string, any>, fieldKey: string): T |
 export function text(record: Record<string, any>, fieldKey: string): string {
   const v = raw(record, fieldKey)
   if (v == null || v === '') return '—'
+  // Compound fields (name, phone, email, date...) are objects. Stringifying one
+  // yields "[object Object]" on screen, so route callers to the right helper
+  // instead of silently rendering junk.
+  if (typeof v === 'object') {
+    const o = v as Record<string, any>
+    const candidate = o.full ?? o.formatted ?? o.email ?? o.identifier ?? o.label
+    return typeof candidate === 'string' && candidate ? candidate : '—'
+  }
   return String(v)
 }
 
@@ -21,8 +29,15 @@ export function email(record: Record<string, any>, fieldKey: string): string {
 }
 
 export function phone(record: Record<string, any>, fieldKey: string): string {
-  const v = raw<{ formatted?: string; full?: string }>(record, fieldKey)
-  return v?.formatted ?? v?.full ?? '—'
+  const v = raw<any>(record, fieldKey)
+  if (!v) return '—'
+  if (typeof v === 'string') return v || '—'
+  for (const k of ['formatted', 'full', 'number'] as const) {
+    if (typeof v[k] === 'string' && v[k]) {
+      return k === 'number' && v.area ? `(${v.area}) ${v.number}` : v[k]
+    }
+  }
+  return '—'
 }
 
 export function bool(record: Record<string, any>, fieldKey: string): boolean {
