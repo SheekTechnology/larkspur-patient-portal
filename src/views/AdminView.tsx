@@ -1,0 +1,85 @@
+import { AppShell } from '../components/AppShell'
+import { AppointmentList } from '../components/AppointmentList'
+import { Badge, Card, EmptyState, ErrorBanner, Spinner } from '../components/ui'
+import { F, OBJ } from '../knack/config'
+import { bool, email, isUpcoming, name, phone, text } from '../knack/format'
+import { useRecords } from '../knack/useRecords'
+
+export function AdminView() {
+  const appts = useRecords(OBJ.appointments, { rowsPerPage: 100, sortField: F.appt.date, sortOrder: 'desc' })
+  const patients = useRecords(OBJ.patients, { rowsPerPage: 100 })
+  const providers = useRecords(OBJ.providers, { rowsPerPage: 100 })
+
+  const upcoming = appts.records.filter((r) => isUpcoming(r, F.appt.date))
+
+  return (
+    <AppShell title="Clinic overview" subtitle="Everything across the practice.">
+      <div className="mb-8 grid gap-4 sm:grid-cols-4">
+        <Stat label="Patients" value={patients.loading ? '—' : String(patients.total)} />
+        <Stat label="Providers" value={providers.loading ? '—' : String(providers.total)} />
+        <Stat label="Appointments" value={appts.loading ? '—' : String(appts.total)} />
+        <Stat label="Upcoming" value={appts.loading ? '—' : String(upcoming.length)} />
+      </div>
+
+      {appts.error ? <div className="mb-6"><ErrorBanner error={appts.error} onRetry={appts.reload} /></div> : null}
+
+      <div className="space-y-8">
+        <section>
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Upcoming appointments</h2>
+          {appts.loading ? <Card><Spinner /></Card> : (
+            <AppointmentList records={upcoming} showPatient emptyTitle="Nothing scheduled" />
+          )}
+        </section>
+
+        <div className="grid gap-8 lg:grid-cols-2">
+          <section>
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Patients</h2>
+            <Card className="divide-y divide-slate-100">
+              {patients.loading ? <Spinner /> : patients.error ? <ErrorBanner error={patients.error} /> :
+                patients.records.length === 0 ? <EmptyState title="No patients" /> :
+                patients.records.map((p) => (
+                  <div key={p.id} className="flex items-center justify-between gap-4 p-4">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">{name(p, F.patient.name)}</p>
+                      <p className="truncate text-xs text-slate-500">{email(p, F.patient.email)} · {phone(p, F.patient.phone)}</p>
+                    </div>
+                    <Badge tone={bool(p, F.patient.active) ? 'green' : 'slate'}>
+                      {bool(p, F.patient.active) ? 'Active' : 'Inactive'}
+                    </Badge>
+                  </div>
+                ))}
+            </Card>
+          </section>
+
+          <section>
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Providers</h2>
+            <Card className="divide-y divide-slate-100">
+              {providers.loading ? <Spinner /> : providers.error ? <ErrorBanner error={providers.error} /> :
+                providers.records.length === 0 ? <EmptyState title="No providers" /> :
+                providers.records.map((p) => (
+                  <div key={p.id} className="flex items-center justify-between gap-4 p-4">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">{name(p, F.provider.name)}</p>
+                      <p className="truncate text-xs text-slate-500">{text(p, F.provider.specialty)}</p>
+                    </div>
+                    <Badge tone={bool(p, F.provider.acceptingNew) ? 'green' : 'amber'}>
+                      {bool(p, F.provider.acceptingNew) ? 'Accepting' : 'Closed'}
+                    </Badge>
+                  </div>
+                ))}
+            </Card>
+          </section>
+        </div>
+      </div>
+    </AppShell>
+  )
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <Card className="p-4">
+      <p className="text-xs uppercase tracking-wide text-slate-500">{label}</p>
+      <p className="mt-1 text-2xl font-semibold tabular-nums">{value}</p>
+    </Card>
+  )
+}
