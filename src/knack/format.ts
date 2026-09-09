@@ -97,3 +97,21 @@ export function statusTone(status: string): 'green' | 'amber' | 'red' | 'slate' 
   if (s.includes('confirm')) return 'green'
   return 'slate'
 }
+
+/** Splits a typed phone number into Knack's write format. */
+export function toPhoneWrite(input: string): { area?: string; number: string } | null {
+  const digits = input.replace(/\D/g, '')
+  if (!digits) return null
+  if (digits.length === 10) return { area: digits.slice(0, 3), number: digits.slice(3) }
+  if (digits.length === 11 && digits.startsWith('1')) {
+    return { area: digits.slice(1, 4), number: digits.slice(4) }
+  }
+  return { number: input.trim() }
+}
+
+/** Splits a display name into Knack's write format. */
+export function toNameWrite(full: string): { first: string; last: string } {
+  const parts = full.trim().split(/\s+/)
+  if (parts.length === 1) return { first: parts[0], last: '' }
+  return { first: parts.slice(0, -1).join(' '), last: parts[parts.length - 1] }
+}

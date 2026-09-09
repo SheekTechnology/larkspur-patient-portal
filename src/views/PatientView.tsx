@@ -1,8 +1,9 @@
 import { AppShell } from '../components/AppShell'
+import { PatientProfileCard } from '../components/PatientProfileCard'
 import { AppointmentList } from '../components/AppointmentList'
 import { Card, EmptyState, ErrorBanner, Spinner } from '../components/ui'
 import { F, OBJ } from '../knack/config'
-import { formatDate, formatDateTime, isUpcoming, phone, text } from '../knack/format'
+import { formatDateTime, isUpcoming, text } from '../knack/format'
 import { useRecords } from '../knack/useRecords'
 import { useSession } from '../knack/session'
 
@@ -11,7 +12,7 @@ import { useSession } from '../knack/session'
  * Knack's Data Access Control scopes every response server-side.
  */
 export function PatientView() {
-  const { user } = useSession()
+  const { user, refresh } = useSession()
 
   const appts = useRecords(OBJ.appointments, {
     rowsPerPage: 100,
@@ -57,21 +58,27 @@ export function PatientView() {
         <div className="space-y-8">
           <section>
             <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Your details</h2>
-            <Card className="p-4">
-              {me.loading ? <Spinner /> : me.error ? <ErrorBanner error={me.error} /> : profile ? (
-                <dl className="space-y-3 text-sm">
-                  <Row label="Date of birth" value={formatDate(profile, F.patient.dob)} />
-                  <Row label="Phone" value={phone(profile, F.patient.phone)} />
-                  <Row label="Insurance" value={text(profile, F.patient.insurance)} />
-                  <Row label="Preferred contact" value={text(profile, F.patient.contactMethod)} />
-                </dl>
-              ) : (
+            {me.loading ? (
+              <Card><Spinner /></Card>
+            ) : me.error ? (
+              <Card className="p-4"><ErrorBanner error={me.error} onRetry={me.reload} /></Card>
+            ) : profile ? (
+              <PatientProfileCard
+                record={profile}
+                onSaved={() => {
+                  me.reload()
+                  // The header greeting comes from the session, so refresh that too.
+                  void refresh()
+                }}
+              />
+            ) : (
+              <Card>
                 <EmptyState
                   title="No patient record linked"
                   body="Your sign-in worked, but no Patients record is connected to this account."
                 />
-              )}
-            </Card>
+              </Card>
+            )}
           </section>
 
           <section>
@@ -94,14 +101,5 @@ export function PatientView() {
         </div>
       </div>
     </AppShell>
-  )
-}
-
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex justify-between gap-4">
-      <dt className="text-slate-500">{label}</dt>
-      <dd className="text-right font-medium">{value}</dd>
-    </div>
   )
 }

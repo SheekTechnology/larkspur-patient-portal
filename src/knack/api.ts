@@ -137,6 +137,18 @@ export interface ListOptions {
   filters?: { match: 'and' | 'or'; rules: FilterRule[] }
 }
 
+/** Updates one record. Field values must use Knack's write format. */
+export function updateRecord<T = KnackRecord>(
+  objectKey: string,
+  recordId: string,
+  fields: Record<string, unknown>,
+): Promise<T> {
+  return knackFetch<T>(`/v1/objects/${objectKey}/records/${recordId}`, {
+    method: 'PUT',
+    body: JSON.stringify(fields),
+  })
+}
+
 export function listRecords<T = KnackRecord>(
   objectKey: string,
   opts: ListOptions = {},
