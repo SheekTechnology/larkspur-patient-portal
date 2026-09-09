@@ -3,6 +3,7 @@ import { createRecord } from '../knack/api'
 import { F, OBJ } from '../knack/config'
 import { formatDateTime, text } from '../knack/format'
 import { useRecords } from '../knack/useRecords'
+import { useSession } from '../knack/session'
 import { Badge, Card, EmptyState, ErrorBanner, Spinner } from './ui'
 
 /**
@@ -78,6 +79,7 @@ export function PatientMessages() {
 }
 
 function Compose({ onCancel, onSent }: { onCancel: () => void; onSent: () => void }) {
+  const { user } = useSession()
   const [subject, setSubject] = useState('')
   const [body, setBody] = useState('')
   const [sending, setSending] = useState(false)
@@ -91,12 +93,19 @@ function Compose({ onCancel, onSent }: { onCancel: () => void; onSent: () => voi
 
     setSending(true)
     try {
-      await createRecord(OBJ.messages, {
+      const fields: Record<string, unknown> = {
         [F.message.subject]: subject.trim(),
         [F.message.body]: body.trim(),
         // Must match a Status option exactly. Matching is case-sensitive.
         [F.message.status]: 'New',
-      })
+      }
+
+      // The Patient connection points at the Patients role record, not the
+      // account. Using session.user.id here would link nothing.
+      const patientRecordId = user?.roleRecordIds['profile_4']
+      if (patientRecordId) fields[F.message.patient] = [{ id: patientRecordId }]
+
+      await createRecord(OBJ.messages, fields)
       onSent()
     } catch (e) {
       setError(e)

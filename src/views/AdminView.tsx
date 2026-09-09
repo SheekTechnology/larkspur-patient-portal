@@ -52,7 +52,9 @@ export function AdminView() {
                       </Badge>
                     </div>
                     <p className="mt-0.5 text-xs text-slate-500">
-                      {connectionLabel(m, F.message.ownedBy)} · {formatDateTime(m, F.message.createdOn)}
+                      {connectionLabel(m, F.message.patient) !== '—'
+                        ? connectionLabel(m, F.message.patient)
+                        : connectionLabel(m, F.message.ownedBy)} · {formatDateTime(m, F.message.createdOn)}
                     </p>
                     <p className="mt-2 whitespace-pre-wrap text-sm text-slate-600">{text(m, F.message.body)}</p>
                   </div>

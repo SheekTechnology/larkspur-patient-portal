@@ -23,10 +23,17 @@ One purpose-built view per role. Do not build a single view with role conditiona
 
 ## Messaging
 
-Patients send messages to the clinic from the patient view. The Messages table carries
-**no connection field to the patient**. Knack stamps `Owned By` from the bearer token on
-create, and Data Access Control scopes reads to owned records, so a patient sees only
-their own without any filter in the frontend.
+Patients send messages to the clinic from the patient view. Each message records the
+patient twice, on purpose:
+
+- **`Owned By`** is stamped by Knack from the bearer token. It points at the Accounts
+  record and is what Data Access Control uses to scope reads, so a patient sees only
+  their own messages without any filter in the frontend.
+- **`Patient`** (`field_104`) is an explicit connection to the Patients table, written on
+  create. This is what the clinic sees, and what any future report or filter would use.
+
+The connection is written with `user.roleRecordIds['profile_4']`, the Patients role
+record id. `session.user.id` is the account id and would link nothing.
 
 Patients can create and read their own messages and cannot see anyone else's. Providers
 can read all of them. Clinic Admin has full control and sees them in the admin view.
@@ -68,8 +75,7 @@ fields on 9 September 2026. Wrong shapes return **HTTP 200 and store nothing**.
 | `address` | `{ street, city, state, zip }` |
 | `link` | `{ url, label }` |
 | `currency` | `"50.75"` |
-
-`connection` writes are untested. Verify against a throwaway app before relying on one.
+| `connection` | `[{ id }]` — also accepts a bare id, an array of ids, or a bare object |
 
 ## Commands
 
