@@ -99,17 +99,23 @@ export function statusTone(status: string): 'green' | 'amber' | 'red' | 'slate' 
 }
 
 /**
- * Knack's write format for a phone field.
+ * Knack's write format for a phone field: a plain string.
  *
- * The field's format is "(999) 999-9999" with no extension, meaning one
- * ten-digit value rather than a broken-out area code. Splitting into
- * { area, number } does not match that format and blanks the field.
+ * Verified against a live phone field formatted "(999) 999-9999". Object
+ * shapes are accepted with HTTP 200 and silently store nothing:
+ *
+ *   { number: "5551234567" }              -> blank
+ *   { area: "555", number: "1234567" }    -> blank
+ *   { formatted: "(555) 123-4567" }       -> blank
+ *   "5551234567"                          -> (555) 123-4567
+ *   "(555) 123-4567"                      -> (555) 123-4567
+ *
+ * Reads return an object, so writing one looks right and is not.
  */
-export function toPhoneWrite(input: string): { number: string } | null {
+export function toPhoneWrite(input: string): string | null {
   const digits = input.replace(/\D/g, '')
   if (!digits) return null
-  const national = digits.length === 11 && digits.startsWith('1') ? digits.slice(1) : digits
-  return { number: national }
+  return digits.length === 11 && digits.startsWith('1') ? digits.slice(1) : digits
 }
 
 /** Splits a display name into Knack's write format. */
