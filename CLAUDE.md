@@ -21,6 +21,16 @@ the user accounts, and the access rules. This repo is UI only.
 
 One purpose-built view per role. Do not build a single view with role conditionals.
 
+## Messaging
+
+Patients send messages to the clinic from the patient view. The Messages table carries
+**no connection field to the patient**. Knack stamps `Owned By` from the bearer token on
+create, and Data Access Control scopes reads to owned records, so a patient sees only
+their own without any filter in the frontend.
+
+Patients can create and read their own messages and cannot see anyone else's. Providers
+can read all of them. Clinic Admin has full control and sees them in the admin view.
+
 ## Rules that matter
 
 **Never filter records by the logged-in user.** Knack's Data Access Control scopes every

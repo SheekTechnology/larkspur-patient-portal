@@ -137,6 +137,17 @@ export interface ListOptions {
   filters?: { match: 'and' | 'or'; rules: FilterRule[] }
 }
 
+/** Creates one record. Knack stamps Created By and Owned By from the bearer token. */
+export function createRecord<T = KnackRecord>(
+  objectKey: string,
+  fields: Record<string, unknown>,
+): Promise<T> {
+  return knackFetch<T>(`/v1/objects/${objectKey}/records`, {
+    method: 'POST',
+    body: JSON.stringify(fields),
+  })
+}
+
 /** Updates one record. Field values must use Knack's write format. */
 export function updateRecord<T = KnackRecord>(
   objectKey: string,

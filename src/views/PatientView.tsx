@@ -1,4 +1,5 @@
 import { AppShell } from '../components/AppShell'
+import { PatientMessages } from '../components/PatientMessages'
 import { PatientProfileCard } from '../components/PatientProfileCard'
 import { AppointmentList } from '../components/AppointmentList'
 import { Card, EmptyState, ErrorBanner, Spinner } from '../components/ui'
@@ -99,6 +100,10 @@ export function PatientView() {
             )}
           </section>
         </div>
+      </div>
+
+      <div className="mt-10 border-t border-slate-200 pt-8">
+        <PatientMessages />
       </div>
     </AppShell>
   )

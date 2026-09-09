@@ -14,6 +14,7 @@ export const OBJ = {
   appointments: 'object_6',
   documents: 'object_7',
   clinicAdmin: 'object_8',
+  messages: 'object_9',
 } as const
 
 /** Field keys, named so call sites read clearly. */
@@ -43,6 +44,13 @@ export const F = {
     contactMethod: 'field_44',
     intakeNotes: 'field_45',
     active: 'field_58',
+  },
+  message: {
+    subject: 'field_95',
+    body: 'field_96',
+    status: 'field_97',
+    createdOn: 'field_99',
+    ownedBy: 'field_103',
   },
   provider: {
     name: 'field_46',
