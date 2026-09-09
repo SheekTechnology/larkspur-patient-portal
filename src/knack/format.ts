@@ -98,15 +98,18 @@ export function statusTone(status: string): 'green' | 'amber' | 'red' | 'slate' 
   return 'slate'
 }
 
-/** Splits a typed phone number into Knack's write format. */
-export function toPhoneWrite(input: string): { area?: string; number: string } | null {
+/**
+ * Knack's write format for a phone field.
+ *
+ * The field's format is "(999) 999-9999" with no extension, meaning one
+ * ten-digit value rather than a broken-out area code. Splitting into
+ * { area, number } does not match that format and blanks the field.
+ */
+export function toPhoneWrite(input: string): { number: string } | null {
   const digits = input.replace(/\D/g, '')
   if (!digits) return null
-  if (digits.length === 10) return { area: digits.slice(0, 3), number: digits.slice(3) }
-  if (digits.length === 11 && digits.startsWith('1')) {
-    return { area: digits.slice(1, 4), number: digits.slice(4) }
-  }
-  return { number: input.trim() }
+  const national = digits.length === 11 && digits.startsWith('1') ? digits.slice(1) : digits
+  return { number: national }
 }
 
 /** Splits a display name into Knack's write format. */

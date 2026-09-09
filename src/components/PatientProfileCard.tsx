@@ -52,22 +52,44 @@ function EditForm({ record, onCancel, onSaved }: { record: KnackRecord; onCancel
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<unknown>(null)
 
+  // Snapshot of what was on screen when editing began.
+  const [initialName] = useState(() => (nameRaw?.full ?? [nameRaw?.first, nameRaw?.last].filter(Boolean).join(' ') ?? '').trim())
+  const [initialEmail] = useState(() => (raw<{ email?: string }>(record, F.patient.email)?.email ?? '').trim())
+  const [initialPhone] = useState(() => {
+    const shown = readPhone(record, F.patient.phone)
+    return shown === '—' ? '' : shown.trim()
+  })
+
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
     setError(null)
 
     if (!fullName.trim()) return setError(new Error('Please enter your name.'))
     if (!emailValue.trim()) return setError(new Error('Please enter your email address.'))
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(emailValue.trim())) {
+      return setError(new Error('That email address does not look right.'))
+    }
 
     setSaving(true)
     try {
-      const fields: Record<string, unknown> = {
-        [F.patient.name]: toNameWrite(fullName),
-        [F.patient.email]: { email: emailValue.trim(), label: '' },
+      // Only send what actually changed. A partial update leaves everything
+      // else untouched, so an unrelated field can never be blanked by a
+      // wrong write format.
+      const fields: Record<string, unknown> = {}
+
+      if (fullName.trim() !== initialName) fields[F.patient.name] = toNameWrite(fullName)
+      if (emailValue.trim() !== initialEmail) {
+        fields[F.patient.email] = { email: emailValue.trim(), label: '' }
       }
-      // Sending an empty phone would be rejected, so only include it when set.
-      const phoneWrite = toPhoneWrite(phoneValue)
-      if (phoneWrite) fields[F.patient.phone] = phoneWrite
+      if (phoneValue.trim() !== initialPhone) {
+        const phoneWrite = toPhoneWrite(phoneValue)
+        if (phoneWrite) fields[F.patient.phone] = phoneWrite
+      }
+
+      if (Object.keys(fields).length === 0) {
+        onSaved()
+        return
+      }
 
       await updateRecord(OBJ.patients, record.id, fields)
       onSaved()
